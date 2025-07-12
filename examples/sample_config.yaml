@@ -1,0 +1,55 @@
+# Sample configuration file for secret-run
+# This file demonstrates the configuration structure
+
+version: "1.0"
+default_profile: "development"
+
+security:
+  mask_output: true
+  audit_logging: true
+  memory_limit: 512  # MB
+  execution_timeout: 300  # seconds
+  require_confirmation: false
+  
+logging:
+  level: "INFO"
+  format: "structured"  # structured|human
+  file: "~/.config/secret-run/logs/secret-run.log"
+  max_size: "10MB"
+  max_files: 5
+  
+sources:
+  default_format: "env"
+  cache_ttl: 300
+  parallel_loading: true
+  validation_enabled: true
+  
+execution:
+  default_shell: "auto"  # auto|bash|zsh|fish|cmd|powershell
+  inherit_environment: true
+  working_directory: "."
+  signal_timeout: 10
+  
+ui:
+  color: true
+  progress_bars: true
+  confirmation_prompts: true
+  table_format: "grid"
+  
+integrations:
+  password_managers:
+    1password:
+      cli_path: "op"
+      account: "my-team"
+    bitwarden:
+      cli_path: "bw"
+      server: "https://vault.bitwarden.com"
+      
+  cloud:
+    aws:
+      region: "us-east-1"
+      profile: "default"
+    gcp:
+      project: "my-project"
+    azure:
+      subscription: "my-subscription" 
