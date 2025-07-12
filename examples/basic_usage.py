@@ -57,68 +57,51 @@ async def main():
     
     # Validate secrets
     print("\n4. Validating secrets...")
-    validation_issues = validator.validate_secrets(
-        secrets, 
-        required_keys=["API_KEY", "DATABASE_URL"]
-    )
-    
-    if validation_issues['errors']:
-        print("   ❌ Validation errors found:")
-        for error in validation_issues['errors']:
-            print(f"      • {error}")
+    validation_results = validator.validate_secrets(secrets)
+    if validation_results['errors']:
+        print(f"   Validation errors: {validation_results['errors']}")
     else:
-        print("   ✅ All secrets passed validation")
+        print("   All secrets passed validation")
     
-    if validation_issues['warnings']:
-        print("   ⚠️  Validation warnings:")
-        for warning in validation_issues['warnings']:
-            print(f"      • {warning}")
-    
-    # Create execution configuration
-    print("\n5. Setting up execution...")
+    # Execute a command with secrets
+    print("\n5. Executing command with secrets...")
     exec_config = ExecutionConfig(
         timeout=30,
-        working_dir=Path.cwd(),
-        inherit_env=True,
-        mask_output=True
+        working_dir=Path.cwd()
     )
     
-    # Execute a simple command
-    print("\n6. Executing command with secrets...")
-    command = ["echo", "Hello from secret-run!"]
-    
     try:
-        result = await executor.execute(command, secrets, exec_config)
-        
-        if result.success:
-            print("   ✅ Command executed successfully")
-            print(f"   Return code: {result.return_code}")
-            print(f"   Execution time: {result.execution_time:.2f}s")
-            if result.stdout.strip():
-                print(f"   Output: {result.stdout.strip()}")
-        else:
-            print("   ❌ Command failed")
-            print(f"   Return code: {result.return_code}")
-            if result.error_message:
-                print(f"   Error: {result.error_message}")
-    
+        result = await executor.execute(
+            command=["echo", "API_KEY is set"],
+            secrets=secret_manager.get_secrets(),
+            config=exec_config
+        )
+        print(f"   Command executed successfully")
+        print(f"   Exit code: {result.return_code}")
+        print(f"   Output: {result.stdout}")
     except Exception as e:
-        print(f"   ❌ Execution failed: {e}")
+        print(f"   Command execution failed: {e}")
     
-    # Show system information
-    print("\n7. System information...")
-    system_info = platform_manager.get_system_info()
-    print(f"   OS: {system_info['system']} {system_info['release']}")
-    print(f"   Python: {system_info['python_version'].split()[0]}")
-    print(f"   Architecture: {system_info['machine']}")
+    # Demonstrate secret transformations
+    print("\n6. Secret transformations...")
+    secret_manager.add_secret("BASE64_VALUE", "SGVsbG8gV29ybGQ=", "example")
+    secret_manager.transform_secret("BASE64_VALUE", "base64_decode")
+    decoded_value = secret_manager.get_secret("BASE64_VALUE")
+    print(f"   Base64 decoded: {decoded_value}")
     
-    # Cleanup
-    print("\n8. Cleaning up...")
-    executor.cleanup()
-    security_manager.cleanup()
-    print("   ✅ Cleanup completed")
+    # Show platform information
+    print("\n7. Platform information...")
+    platform_info = platform_manager.get_system_info()
+    print(f"   OS: {platform_info['system']}")
+    print(f"   Architecture: {platform_info['machine']}")
+    print(f"   Python version: {platform_info['python_version'].split()[0]}")
     
-    print("\n🎉 Example completed successfully!")
+    print("\n✅ Basic usage example completed!")
+    print("\n📝 Note: For advanced features like secret rotation and cloud integrations,")
+    print("   use the demo scripts:")
+    print("   - ./demo_showcase.sh (single-key demo)")
+    print("   - ./multi_key_demo.sh (multi-key demo)")
+    print("\n🔑 Important: Secret metadata must be registered before rotation operations.")
 
 
 if __name__ == "__main__":

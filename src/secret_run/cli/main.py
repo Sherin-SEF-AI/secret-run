@@ -1,6 +1,7 @@
 """Main CLI entry point for secret-run."""
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -18,7 +19,7 @@ from ..core.validators import SecretValidator
 from ..utils.config import ConfigManager
 from ..utils.logging import setup_logging
 from ..utils.platform import PlatformManager
-from .commands import run, validate, config, audit
+from .commands import run, validate, config, audit, rotate, cloud
 
 # Create Typer app
 app = typer.Typer(
@@ -307,6 +308,8 @@ app.add_typer(run.app, name="run", help="Execute commands with secrets")
 app.add_typer(validate.app, name="validate", help="Validate secrets and configurations")
 app.add_typer(config.app, name="config", help="Manage configuration")
 app.add_typer(audit.app, name="audit", help="Audit and monitoring commands")
+app.add_typer(rotate.app, name="rotate", help="Secret rotation and lifecycle management")
+app.add_typer(cloud.app, name="cloud", help="Cloud integrations management")
 
 
 def main_wrapper():

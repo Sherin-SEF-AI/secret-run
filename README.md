@@ -15,6 +15,13 @@ Secret Run is a production-ready command-line tool that executes commands with t
 - **🌐 Cross-Platform**: Works on Linux, macOS, and Windows
 - **⚡ High Performance**: Minimal overhead with async execution
 - **🎨 Beautiful UI**: Rich terminal interface with progress indicators
+- **🔄 Secret Rotation**: Advanced secret lifecycle management with policies
+- **☁️ Cloud Integrations**: Native support for AWS, GCP, Azure, and HashiCorp Vault
+- **🤖 Auto-Rotation**: Automated secret rotation based on policies
+- **📋 Policy Management**: Flexible rotation policies with pattern matching
+- **🏥 Health Monitoring**: Secret expiry tracking and health checks
+- **🔄 Multi-Cloud Sync**: Synchronize secrets across multiple cloud providers
+- **🔑 Metadata Management**: Automatic secret metadata registration and validation
 
 ## 🚀 Quick Start
 
@@ -52,6 +59,41 @@ echo '{"API_KEY": "secret123"}' | secret-run run "python script.py" --stdin
 secret-run run "python app.py" --file .env --validate --require-keys API_KEY,DATABASE_URL
 ```
 
+## 🔑 Secret Metadata Management
+
+**Important**: Before generating or rotating secrets, you must register secret metadata. This ensures proper lifecycle management and policy enforcement.
+
+### Automatic Metadata Registration
+
+The demo scripts automatically handle metadata registration. For manual usage:
+
+```bash
+# Metadata is stored in ~/.config/secret-run/secret-metadata.json
+# Each secret requires: key, policy, hash, and metadata fields
+```
+
+### Demo Scripts
+
+Two demo scripts are provided for different use cases:
+
+#### Single-Key Demo (`demo_showcase.sh`)
+```bash
+# Configure variables at the top of the script
+SECRET_KEY="my-secret"
+SECRET_POLICY="my-policy"
+SECRET_LENGTH=32
+
+# Run the demo
+./demo_showcase.sh
+```
+
+#### Multi-Key Demo (`multi_key_demo.sh`)
+```bash
+# Demonstrates multiple secrets with different policies
+# Configurable in the SECRETS array: "key:policy:length"
+./multi_key_demo.sh
+```
+
 ## 📋 Command Reference
 
 ### Core Commands
@@ -69,10 +111,64 @@ secret-run config [COMMAND] [OPTIONS]
 # Audit and monitoring
 secret-run audit [COMMAND] [OPTIONS]
 
+# Secret rotation and lifecycle management
+secret-run rotate [COMMAND] [OPTIONS]
+
+# Cloud integrations management
+secret-run cloud [COMMAND] [OPTIONS]
+
 # System information and health
 secret-run doctor [OPTIONS]
 secret-run info [OPTIONS]
 secret-run version [OPTIONS]
+```
+
+### Advanced Commands
+
+#### Secret Rotation
+```bash
+# Check rotation status
+secret-run rotate status --days 30
+
+# Generate new secret (requires metadata registration)
+secret-run rotate generate --key API_KEY --method random --policy api_keys
+
+# Rotate specific secret
+secret-run rotate rotate --key DATABASE_PASSWORD --method random
+
+# Auto-rotate expired secrets
+secret-run rotate auto-rotate --dry-run
+
+# Manage rotation policies
+secret-run rotate policy --action list
+secret-run rotate policy --action create --name custom --pattern "^CUSTOM_.*" --interval 60
+```
+
+#### Cloud Integrations
+```bash
+# List cloud integrations
+secret-run cloud list
+
+# Add AWS integration
+secret-run cloud add-aws --name prod --region us-east-1 --profile default
+
+# Add GCP integration
+secret-run cloud add-gcp --name prod --project my-project
+
+# Add Azure integration
+secret-run cloud add-azure --name prod --vault-url https://my-vault.vault.azure.net/
+
+# Add HashiCorp Vault integration
+secret-run cloud add-vault --name prod --address https://vault.company.com
+
+# Get secret from cloud
+secret-run cloud get --secret my-secret --format json
+
+# Put secret to cloud
+secret-run cloud put --secret my-secret --value "secret-value"
+
+# Test cloud connectivity
+secret-run cloud test --integration prod
 ```
 
 ### Run Command Options
@@ -146,6 +242,27 @@ ui:
   table_format: "grid"
 ```
 
+### Secret Metadata Configuration
+
+Secret metadata is stored in `~/.config/secret-run/secret-metadata.json`:
+
+```json
+{
+  "SECRET_KEY": {
+    "key": "SECRET_KEY",
+    "created_at": "2025-07-12T20:44:02.123456",
+    "last_rotated": "2025-07-12T20:44:02.123456",
+    "expires_at": null,
+    "rotation_count": 1,
+    "hash": "sha256_hash_of_secret_key",
+    "policy": "policy_name",
+    "tags": [],
+    "usage_count": 0,
+    "last_used": null
+  }
+}
+```
+
 ### Profile Configuration
 
 Create environment-specific profiles:
@@ -209,178 +326,132 @@ validation:
 - **Secret Masking**: Automatic masking of sensitive values in logs
 - **Tamper Detection**: Log integrity verification
 
-## 🔌 Integrations
+## 🚀 Advanced Features
 
-### Cloud Services
-```bash
-# AWS Secrets Manager
-secret-run source add-aws production --region us-east-1 --profile default
+### Secret Rotation Workflow
 
-# Google Cloud Secret Manager
-secret-run source add-gcp production --project my-project
+1. **Create Policy**: Define rotation rules and patterns
+2. **Register Metadata**: Add secret metadata to enable rotation
+3. **Generate/Rotate**: Create or update secrets with policies
+4. **Monitor**: Track expiry and rotation status
 
-# Azure Key Vault
-secret-run source add-azure production --vault my-vault --subscription my-sub
+### Multi-Cloud Secret Management
 
-# HashiCorp Vault
-secret-run source add-vault production --address https://vault.company.com
-```
+- **AWS Secrets Manager**: Native integration with IAM roles
+- **Google Cloud Secret Manager**: Project-based secret management
+- **Azure Key Vault**: Enterprise-grade secret storage
+- **HashiCorp Vault**: Self-hosted secret management
 
-### Password Managers
-```bash
-# 1Password
-secret-run source add-1password work --vault work --account my-team
-
-# Bitwarden
-secret-run source add-bitwarden personal --organization my-org
-
-# KeePass
-secret-run source add-keepass personal --database passwords.kdbx
-```
-
-## 🧪 Examples
-
-### Web Application
-```bash
-# Run a Django application with database credentials
-secret-run run "python manage.py runserver" \
-  --file .env.production \
-  --validate \
-  --require-keys DATABASE_URL,SECRET_KEY,DEBUG \
-  --timeout 600
-```
-
-### Docker Compose
-```bash
-# Run Docker Compose with secrets
-secret-run run "docker-compose up -d" \
-  --file docker.env \
-  --working-dir /path/to/docker/project \
-  --mask-output
-```
-
-### Kubernetes
-```bash
-# Apply Kubernetes manifests with secrets
-secret-run run "kubectl apply -f k8s/" \
-  --file k8s-secrets.yaml \
-  --format yaml \
-  --validate
-```
-
-### CI/CD Pipeline
-```bash
-# In GitHub Actions
-- name: Deploy with secrets
-  run: |
-    secret-run run "npm run deploy" \
-      --env NPM_TOKEN=${{ secrets.NPM_TOKEN }} \
-      --env AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-      --env AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-```
-
-## 🛠️ Development
-
-### Setup Development Environment
+### Health Monitoring
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/secret-run.git
-cd secret-run
+# Check secret health
+secret-run rotate status --days 7
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Monitor expiring secrets
+secret-run rotate status --format json
 
-# Install development dependencies
-pip install -e ".[dev,all]"
-
-# Install pre-commit hooks
-pre-commit install
+# Auto-rotate expired secrets
+secret-run rotate auto-rotate --dry-run
 ```
 
-### Running Tests
+## 🛠️ Troubleshooting
 
+### Common Issues
+
+#### "No metadata found for secret"
+**Solution**: Register secret metadata before generation:
 ```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=secret_run --cov-report=html
-
-# Run specific test categories
-pytest -m unit
-pytest -m integration
-pytest -m security
-pytest -m performance
+# Use the demo scripts which handle this automatically
+./demo_showcase.sh
+./multi_key_demo.sh
 ```
 
-### Code Quality
-
+#### Pyperclip clipboard warning
+**Solution**: Install clipboard support or ignore the warning:
 ```bash
-# Format code
-black src/ tests/
+# Ubuntu/Debian
+sudo apt-get install xclip
 
-# Lint code
-ruff check src/ tests/
+# macOS
+brew install reattach-to-user-namespace
 
-# Type checking
-mypy src/
-
-# Security checks
-bandit -r src/
-safety check
+# The warning doesn't affect secret generation
 ```
 
-## 📊 Performance
+#### Policy creation fails
+**Solution**: Check if policy already exists:
+```bash
+secret-run rotate policy --action list
+```
 
-- **CLI Startup Time**: <200ms
-- **Command Execution Overhead**: <50ms
-- **Memory Usage**: Handles secrets up to 1MB
-- **Environment Variables**: Supports 1000+ variables
-- **Reliability**: <0.1% failure rate in normal operations
+### Debug Mode
+
+Enable verbose logging for troubleshooting:
+```bash
+secret-run --verbose rotate generate --key my-secret --policy my-policy
+```
+
+## 📚 Examples
+
+### Basic Secret Management
+```bash
+# Create a policy
+secret-run rotate policy --action create --name api-keys --pattern "^.*_API_KEY$" --interval 90
+
+# Generate a secret (with metadata registration)
+./demo_showcase.sh
+
+# Rotate the secret
+secret-run rotate rotate --key demo-secret --method random --force
+```
+
+### Multi-Environment Setup
+```bash
+# Development
+SECRET_KEY="dev-api-key" SECRET_POLICY="dev-policy" ./demo_showcase.sh
+
+# Production
+SECRET_KEY="prod-api-key" SECRET_POLICY="prod-policy" ./demo_showcase.sh
+
+# Batch processing
+./multi_key_demo.sh
+```
+
+### Cloud Integration
+```bash
+# Add cloud provider
+secret-run cloud add-aws --name prod --region us-east-1
+
+# Sync secrets
+secret-run cloud put --secret my-secret --value "secret-value"
+secret-run cloud get --secret my-secret
+```
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Development Workflow
+### Development Setup
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and add tests
-4. Run the test suite: `pytest`
-5. Commit your changes: `git commit -m 'Add amazing feature'`
-6. Push to the branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
+```bash
+git clone https://github.com/yourusername/secret-run.git
+cd secret-run
+pip install -e .[dev]
+pytest
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🔗 Links
 
-- **Documentation**: [https://secret-run.readthedocs.io](https://secret-run.readthedocs.io)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/secret-run/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/secret-run/discussions)
-- **Security**: [Security Policy](SECURITY.md)
-
-## 🙏 Acknowledgments
-
-- Built with [Typer](https://typer.tiangolo.com/) for CLI
-- Beautiful output with [Rich](https://rich.readthedocs.io/)
-- Data validation with [Pydantic](https://pydantic-docs.helpmanual.io/)
-- Cross-platform support with [platformdirs](https://platformdirs.readthedocs.io/)
-
-## 📈 Roadmap
-
-- [ ] Team collaboration features
-- [ ] Advanced secret rotation
-- [ ] Kubernetes operator
-- [ ] Web UI
-- [ ] Mobile app
-- [ ] Enterprise features
+- [Documentation](https://secret-run.readthedocs.io/)
+- [Issue Tracker](https://github.com/yourusername/secret-run/issues)
+- [Changelog](CHANGELOG.md)
+- [Contributing](CONTRIBUTING.md)
 
 ---
 
-**Made with ❤️ for secure development** 
+**Made with ❤️ for secure DevOps** 

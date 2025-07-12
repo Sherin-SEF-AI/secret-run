@@ -1,5 +1,5 @@
 """CLI command modules."""
 
-from . import run, validate, config, audit
+from . import run, validate, config, audit, rotate, cloud
 
-__all__ = ["run", "validate", "config", "audit"] 
+__all__ = ["run", "validate", "config", "audit", "rotate", "cloud"] 

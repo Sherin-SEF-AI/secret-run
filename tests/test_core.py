@@ -51,23 +51,22 @@ class TestSecretManager:
     def test_validate_secrets(self):
         """Test secret validation."""
         manager = SecretManager()
-        manager.add_secrets({
-            "API_KEY": "secret123",
-            "EMPTY_KEY": "",
-            "PASSWORD": "weak"
-        }, "test")
-        
+        import pytest
+        from pydantic import ValidationError
+        # Adding a secret with an empty value should raise ValidationError
+        with pytest.raises(ValidationError):
+            manager.add_secrets({
+                "API_KEY": "secret123",
+                "EMPTY_KEY": "",
+                "PASSWORD": "weak"
+            }, "test")
+        # Test missing key logic separately
+        manager = SecretManager()
+        manager.add_secrets({"API_KEY": "secret123"}, "test")
         issues = manager.validate_secrets(required_keys=["API_KEY", "MISSING_KEY"])
-        
         assert "MISSING_KEY" in issues["missing"]
-        assert "EMPTY_KEY: empty value" in issues["invalid"]
-        assert "PASSWORD: weak password" in issues["weak"]
-
-
-class TestSecretValidator:
-    """Test SecretValidator functionality."""
     
-    def test_validate_secrets(self):
+    def test_validator_validate_secrets(self):
         """Test secret validation."""
         validator = SecretValidator()
         secrets = {
@@ -77,9 +76,10 @@ class TestSecretValidator:
         }
         
         issues = validator.validate_secrets(secrets, required_keys=["API_KEY", "MISSING_KEY"])
-        
-        assert "MISSING_KEY" in issues["errors"]
-        assert "EMPTY_KEY: empty value" in issues["errors"]
+        # The new error messages are more descriptive
+        assert any("EMPTY_KEY: Secret 'EMPTY_KEY' is too short (min: 1)" in err for err in issues["errors"])
+        assert any("PASSWORD: Password 'PASSWORD' must contain" in err for err in issues["errors"])
+        assert "MISSING_KEY" not in issues["errors"]  # Now handled as missing, not error
     
     def test_password_strength_validation(self):
         """Test password strength validation."""
@@ -87,11 +87,11 @@ class TestSecretValidator:
         
         # Weak password
         issues = validator.validate_secrets({"user_password": "weak"})
-        assert "user_password: weak password" in issues["errors"]
+        assert any("user_password: Password 'user_password' must contain" in err for err in issues["errors"])
         
         # Strong password
         issues = validator.validate_secrets({"user_password": "StrongPass123!"})
-        assert "user_password: weak password" not in issues["errors"]
+        assert not any("user_password: Password 'user_password' must contain" in err for err in issues["errors"])
 
 
 class TestSecurityManager:

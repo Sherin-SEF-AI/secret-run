@@ -8,23 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project structure and core functionality
-- Command execution engine with secret injection
-- Multiple secret source loaders (env, json, yaml, stdin)
-- Secret validation and transformation capabilities
-- Security manager with memory safety features
-- Configuration management system
-- Cross-platform utilities
-- CLI interface with Typer and Rich
-- Comprehensive logging system
-- Audit and monitoring capabilities
+- **Secret Metadata Management**: Automatic registration and validation of secret metadata
+- **Demo Scripts**: Two comprehensive demo scripts for different use cases
+  - `demo_showcase.sh`: Single-key demo with configurable variables
+  - `multi_key_demo.sh`: Multi-key batch demo for advanced workflows
+- **Robust Error Handling**: Improved error handling for metadata registration
+- **Variable-Based Configuration**: Easy switching between different secret keys and policies
+- **Batch Processing**: Support for processing multiple secrets with different policies
+- **Automatic Metadata Creation**: Scripts automatically handle metadata registration
+- **Policy Pattern Matching**: Enhanced policy creation with pattern-based matching
+
+### Fixed
+- **"No metadata found for secret" Error**: Resolved by implementing proper metadata registration
+- **Secret Generation Failures**: Fixed issues with secret generation when metadata was missing
+- **Policy Creation Conflicts**: Improved handling of existing policies in demo scripts
+- **Script Execution Flow**: Fixed script termination issues caused by pyperclip warnings
+- **Metadata Validation**: Fixed validation errors with null hash values in metadata
+
+### Changed
+- **Documentation**: Comprehensive updates to README with troubleshooting and examples
+- **Demo Workflow**: Streamlined demo process with automatic metadata handling
+- **Error Messages**: Improved error messages and troubleshooting guidance
+- **Configuration**: Enhanced configuration examples and metadata structure documentation
 
 ### Security
-- Memory-safe secret handling with explicit cleanup
-- Process isolation for command execution
-- Input validation and sanitization
-- Secret masking in logs and output
-- Secure file deletion utilities
+- **Metadata Integrity**: Ensured proper hash generation for secret metadata
+- **Validation**: Added validation for secret metadata structure and required fields
 
 ## [0.1.0] - 2024-01-01
 
