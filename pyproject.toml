@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "secret-run"
-dynamic = ["version"]
+version = "0.1.0"
 description = "Secure command execution with temporary secret injection"
 readme = "README.md"
 license = {text = "MIT"}
@@ -86,7 +86,6 @@ include = [
     "/src",
     "/tests",
     "/examples",
-    "/docs",
     "README.md",
     "CHANGELOG.md",
     "CONTRIBUTING.md",
